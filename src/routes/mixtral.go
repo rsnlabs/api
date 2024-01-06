@@ -31,7 +31,7 @@ func MixtralHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mixtralURL := "https://ai.rnilaweera.ovh/api/v1/user/llama"
+	mixtralURL := "https://ai.rnilaweera.ovh/api/v1/user/mixtral"
 	mixtralBearerKey := os.Getenv("APIKEY")
 
 	req, err := http.NewRequest("POST", mixtralURL, bytes.NewBuffer(body))
