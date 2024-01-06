@@ -17,6 +17,7 @@ func main() {
 	routes.RegisterOpenChatRoute(r)
 	routes.RegisterBardRoute(r)
 	routes.RegisterLlaMaRoute(r)
+	routes.RegisterMixtralRoute(r)
 
 	logger := log.New(os.Stdout, "Server: ", log.LstdFlags)
 
