@@ -16,6 +16,7 @@ func main() {
 	routes.RegisterGPTRoute(r)
 	routes.RegisterOpenChatRoute(r)
 	routes.RegisterBardRoute(r)
+	routes.RegisterBingRoute(r)
 	routes.RegisterLlaMaRoute(r)
 	routes.RegisterCodeLlamaRoute(r)
 	routes.RegisterMixtralRoute(r)
