@@ -1,6 +1,6 @@
 ## RsnAI Public API
 
-<h1 align="center"><b>RsnAI</b> <img src="https://media.discordapp.net/attachments/1138019229459812364/1206139806439186454/rsn-bot-1.png" width="28" style="border-radius: 50%; margin-bottom: -5px"></h1>
+<h1 align="center"><b>RsnAI</b> <img src="https://i.ibb.co/0J89TrT/rsn-bot-1.png" width="28" style="border-radius: 50%; margin-bottom: -5px"></h1>
 <p align="center"><i>The ultimate AI-powered RsnAI</i></p>
 
 ## Getting Started
