@@ -1,4 +1,4 @@
-package routes
+package textRoutes
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"api/src/middleware"
 )
 
-func BardHandler(w http.ResponseWriter, r *http.Request) {
+func MixtralHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
@@ -31,37 +31,37 @@ func BardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bardURL := "https://ai.rnilaweera.ovh/api/v1/user/bard"
-	bardBearerKey := os.Getenv("APIKEY")
+	mixtralURL := "https://api.rsnai.org/api/v1/user/mixtral"
+	mixtralBearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", bardURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", mixtralURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating Bard request", http.StatusInternalServerError)
+		http.Error(w, "Error creating Mixtral request", http.StatusInternalServerError)
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+bardBearerKey)
+	req.Header.Set("Authorization", "Bearer "+mixtralBearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to Bard API", http.StatusInternalServerError)
+		http.Error(w, "Error making request to Mixtral API", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	bardResponse, err := ioutil.ReadAll(resp.Body)
+	mixtralResponse, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading Bard response", http.StatusInternalServerError)
+		http.Error(w, "Error reading Mixtral response", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
-	w.Write(bardResponse)
+	w.Write(mixtralResponse)
 }
 
-func RegisterBardRoute(r *mux.Router) {
-	r.Handle("/bard", middleware.AuthMiddleware(http.HandlerFunc(BardHandler))).Methods("POST")
+func RegisterMixtralRoute(r *mux.Router) {
+	r.Handle("/api/mixtral", middleware.AuthMiddleware(http.HandlerFunc(MixtralHandler))).Methods("POST")
 }

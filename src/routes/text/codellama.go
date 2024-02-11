@@ -1,4 +1,4 @@
-package routes
+package textRoutes
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"api/src/middleware"
 )
 
-func LlaMaHandler(w http.ResponseWriter, r *http.Request) {
+func CodeLlamaHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
@@ -31,37 +31,37 @@ func LlaMaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	llamaURL := "https://ai.rnilaweera.ovh/api/v1/user/llama"
-	llamaBearerKey := os.Getenv("APIKEY")
+	codellamaURL := "https://api.rsnai.org/api/v1/user/codellama"
+	codellamaBearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", llamaURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", codellamaURL, bytes.NewBuffer(body))
 	if err != nil {
 		http.Error(w, "Error creating GPT request", http.StatusInternalServerError)
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+llamaBearerKey)
+	req.Header.Set("Authorization", "Bearer "+codellamaBearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to LlaMa API", http.StatusInternalServerError)
+		http.Error(w, "Error making request to CodeLlama API", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	llamaResponse, err := ioutil.ReadAll(resp.Body)
+	codellamaResponse, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading LlaMa response", http.StatusInternalServerError)
+		http.Error(w, "Error reading CodeLlama response", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
-	w.Write(llamaResponse)
+	w.Write(codellamaResponse)
 }
 
-func RegisterLlaMaRoute(r *mux.Router) {
-	r.Handle("/llama", middleware.AuthMiddleware(http.HandlerFunc(LlaMaHandler))).Methods("POST")
+func RegisterCodeLlamaRoute(r *mux.Router) {
+	r.Handle("/api/codellama", middleware.AuthMiddleware(http.HandlerFunc(CodeLlamaHandler))).Methods("POST")
 }

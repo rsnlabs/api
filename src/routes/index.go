@@ -6,7 +6,7 @@ import (
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Welcome to the API!"))
+	w.Write([]byte("Welcome to the RsnAI Public API!"))
 }
 
 func RegisterHomeRoute(r *mux.Router) {

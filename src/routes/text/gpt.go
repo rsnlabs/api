@@ -1,4 +1,4 @@
-package routes
+package textRoutes
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ func GPTHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gptURL := "https://ai.rnilaweera.ovh/api/v1/user/gpt"
+	gptURL := "https://api.rsnai.org/api/v1/user/gpt"
 	gptBearerKey := os.Getenv("APIKEY")
 
 	req, err := http.NewRequest("POST", gptURL, bytes.NewBuffer(body))
@@ -63,5 +63,5 @@ func GPTHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func RegisterGPTRoute(r *mux.Router) {
-	r.Handle("/gpt", middleware.AuthMiddleware(http.HandlerFunc(GPTHandler))).Methods("POST")
+	r.Handle("/api/gpt", middleware.AuthMiddleware(http.HandlerFunc(GPTHandler))).Methods("POST")
 }

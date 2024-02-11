@@ -3,16 +3,19 @@ package middleware
 import (
 	"encoding/json"
 	"log"
-	"github.com/joho/godotenv"
-	"net/http"
 	"os"
 	"strings"
+
+	"github.com/joho/godotenv"
+	"net/http"
+
+	"api/src/utils"
 )
 
 func init() {
-    if err := godotenv.Load(); err != nil {
-        log.Fatal("Error loading .env file")
-    }
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(utils.ColorRed + "Error loading .env file" + utils.ColorReset)
+	}
 }
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -23,7 +26,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			unauthorizedResponse := map[string]string{"error": "Unauthorized"}
 			jsonResponse, err := json.Marshal(unauthorizedResponse)
 			if err != nil {
-				http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
+				http.Error(w, utils.ColorRed+"Error creating JSON response"+utils.ColorReset, http.StatusInternalServerError)
 				return
 			}
 
@@ -39,7 +42,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			unauthorizedResponse := map[string]string{"error": "Unauthorized"}
 			jsonResponse, err := json.Marshal(unauthorizedResponse)
 			if err != nil {
-				http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
+				http.Error(w, utils.ColorRed+"Error creating JSON response"+utils.ColorReset, http.StatusInternalServerError)
 				return
 			}
 
@@ -54,7 +57,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 func isValidToken(token string) bool {
-    authKey := os.Getenv("AUTH_KEY")
-    log.Println("Loaded AUTH_KEY:", authKey)
-    return token == authKey
+	authKey := os.Getenv("AUTH_KEY")
+	log.Println(utils.ColorGreen + "Loaded AUTH_KEY: " + authKey + utils.ColorReset)
+	return token == authKey
 }

@@ -1,4 +1,4 @@
-package routes
+package textRoutes
 
 import (
 	"bytes"
@@ -10,7 +10,7 @@ import (
 	"api/src/middleware"
 )
 
-func CodeLlamaHandler(w http.ResponseWriter, r *http.Request) {
+func BardHandler(w http.ResponseWriter, r *http.Request) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Error reading request body", http.StatusInternalServerError)
@@ -31,37 +31,37 @@ func CodeLlamaHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	codellamaURL := "https://ai.rnilaweera.ovh/api/v1/user/codellama"
-	codellamaBearerKey := os.Getenv("APIKEY")
+	bardURL := "https://api.rsnai.org/api/v1/user/bard"
+	bardBearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", codellamaURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", bardURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating GPT request", http.StatusInternalServerError)
+		http.Error(w, "Error creating Bard request", http.StatusInternalServerError)
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+codellamaBearerKey)
+	req.Header.Set("Authorization", "Bearer "+bardBearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to CodeLlama API", http.StatusInternalServerError)
+		http.Error(w, "Error making request to Bard API", http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
 
-	codellamaResponse, err := ioutil.ReadAll(resp.Body)
+	bardResponse, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading CodeLlama response", http.StatusInternalServerError)
+		http.Error(w, "Error reading Bard response", http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(resp.StatusCode)
-	w.Write(codellamaResponse)
+	w.Write(bardResponse)
 }
 
-func RegisterCodeLlamaRoute(r *mux.Router) {
-	r.Handle("/codellama", middleware.AuthMiddleware(http.HandlerFunc(CodeLlamaHandler))).Methods("POST")
+func RegisterBardRoute(r *mux.Router) {
+	r.Handle("/api/bard", middleware.AuthMiddleware(http.HandlerFunc(BardHandler))).Methods("POST")
 }
