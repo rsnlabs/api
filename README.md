@@ -16,5 +16,5 @@ go mod download
 ### Run the server(localhost:5000)
 
 ```bash
-go run src/main.go
+go run src/app.go
 ```
