@@ -1,63 +1,44 @@
 package middleware
 
 import (
-	"encoding/json"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/joho/godotenv"
 	"net/http"
 
-	"api/src/utils"
+	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func init() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal(utils.ColorRed + "Error loading .env file" + utils.ColorReset)
+		log.Fatal("Error loading .env file")
 	}
 }
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("Authorization")
+func AuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token := c.GetHeader("Authorization")
 
 		if token == "" || !strings.HasPrefix(token, "Bearer ") {
-			unauthorizedResponse := map[string]string{"error": "Unauthorized"}
-			jsonResponse, err := json.Marshal(unauthorizedResponse)
-			if err != nil {
-				http.Error(w, utils.ColorRed+"Error creating JSON response"+utils.ColorReset, http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write(jsonResponse)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
 			return
 		}
 
 		actualToken := strings.TrimPrefix(token, "Bearer ")
 
 		if !isValidToken(actualToken) {
-			unauthorizedResponse := map[string]string{"error": "Unauthorized"}
-			jsonResponse, err := json.Marshal(unauthorizedResponse)
-			if err != nil {
-				http.Error(w, utils.ColorRed+"Error creating JSON response"+utils.ColorReset, http.StatusInternalServerError)
-				return
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write(jsonResponse)
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.Abort()
 			return
 		}
 
-		next.ServeHTTP(w, r)
-	})
+		c.Next()
+	}
 }
 
 func isValidToken(token string) bool {
 	authKey := os.Getenv("AUTH_KEY")
-	log.Println(utils.ColorGreen + "Loaded AUTH_KEY: " + authKey + utils.ColorReset)
 	return token == authKey
 }

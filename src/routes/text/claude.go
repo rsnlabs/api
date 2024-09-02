@@ -2,66 +2,55 @@ package textRoutes
 
 import (
 	"bytes"
-	"encoding/json"
-	"os"
-  "github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
 	"api/src/middleware"
 )
 
-func ClaudeHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func ClaudeHandler(c *gin.Context) {
+	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
 		return
 	}
 
 	if len(body) == 0 {
-		noPromptResponse := map[string]string{"message": "No prompt was provided"}
-		jsonResponse, err := json.Marshal(noPromptResponse)
-		if err != nil {
-			http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonResponse)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No prompt was provided"})
 		return
 	}
 
-	openchatURL := "https://api.rsnai.org/api/v1/user/claude"
-	openchatBearerKey := os.Getenv("APIKEY")
+	APIURL := "https://api.rnilaweera.lk/api/v1/user/claude"
+	BearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", openchatURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", APIURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating Claude request", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating Claude request"})
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+openchatBearerKey)
+	req.Header.Set("Authorization", "Bearer "+BearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to Claude API", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error making request to Claude API"})
 		return
 	}
 	defer resp.Body.Close()
 
-	openchatResponse, err := ioutil.ReadAll(resp.Body)
+	Response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading Claude response", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading Claude response"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(openchatResponse)
+	c.Data(resp.StatusCode, "application/json", Response)
 }
 
-func RegisterClaudeRoute(r *mux.Router) {
-	r.Handle("/api/claude", middleware.AuthMiddleware(http.HandlerFunc(ClaudeHandler))).Methods("POST")
+func RegisterClaudeRoute(r *gin.Engine) {
+	r.POST("/api/claude", middleware.AuthMiddleware(), ClaudeHandler)
 }

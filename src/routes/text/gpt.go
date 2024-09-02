@@ -2,66 +2,55 @@ package textRoutes
 
 import (
 	"bytes"
-	"encoding/json"
-	"os"
-  "github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
 	"api/src/middleware"
 )
 
-func GPTHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func GptHandler(c *gin.Context) {
+	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
 		return
 	}
 
 	if len(body) == 0 {
-		noPromptResponse := map[string]string{"message": "No prompt was provided"}
-		jsonResponse, err := json.Marshal(noPromptResponse)
-		if err != nil {
-			http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonResponse)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No prompt was provided"})
 		return
 	}
 
-	gptURL := "https://api.rsnai.org/api/v1/user/gpt"
-	gptBearerKey := os.Getenv("APIKEY")
+	APIURL := "https://api.rnilaweera.lk/api/v1/user/gpt"
+	BearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", gptURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", APIURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating GPT request", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating GPT request"})
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+gptBearerKey)
+	req.Header.Set("Authorization", "Bearer "+BearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to GPT API", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error making request to GPT API"})
 		return
 	}
 	defer resp.Body.Close()
 
-	gptResponse, err := ioutil.ReadAll(resp.Body)
+	Response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading GPT response", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading GPT response"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(gptResponse)
+	c.Data(resp.StatusCode, "application/json", Response)
 }
 
-func RegisterGPTRoute(r *mux.Router) {
-	r.Handle("/api/gpt", middleware.AuthMiddleware(http.HandlerFunc(GPTHandler))).Methods("POST")
+func RegisterGptRoute(r *gin.Engine) {
+	r.POST("/api/gpt", middleware.AuthMiddleware(), GptHandler)
 }

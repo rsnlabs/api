@@ -1,14 +1,13 @@
 package routes
 
 import (
-	"net/http"
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Welcome to the RsnAI Public API!"))
+func HomeHandler(c *gin.Context) {
+	c.String(200, "Welcome to the RsnAI Public API!")
 }
 
-func RegisterHomeRoute(r *mux.Router) {
-	r.HandleFunc("/", HomeHandler).Methods("GET")
+func RegisterHomeRoute(r *gin.Engine) {
+	r.GET("/", HomeHandler)
 }

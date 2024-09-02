@@ -2,66 +2,55 @@ package textRoutes
 
 import (
 	"bytes"
-	"encoding/json"
-	"os"
-  "github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
 	"api/src/middleware"
 )
 
-func BardHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func BardHandler(c *gin.Context) {
+	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
 		return
 	}
 
 	if len(body) == 0 {
-		noPromptResponse := map[string]string{"message": "No prompt was provided"}
-		jsonResponse, err := json.Marshal(noPromptResponse)
-		if err != nil {
-			http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonResponse)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No prompt was provided"})
 		return
 	}
 
-	bardURL := "https://api.rsnai.org/api/v1/user/bard"
-	bardBearerKey := os.Getenv("APIKEY")
+	APIURL := "https://api.rnilaweera.lk/api/v1/user/bard"
+	BearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", bardURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", APIURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating Bard request", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating Bard request"})
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+bardBearerKey)
+	req.Header.Set("Authorization", "Bearer "+BearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to Bard API", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error making request to Bard API"})
 		return
 	}
 	defer resp.Body.Close()
 
-	bardResponse, err := ioutil.ReadAll(resp.Body)
+	Response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading Bard response", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading Bard response"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(bardResponse)
+	c.Data(resp.StatusCode, "application/json", Response)
 }
 
-func RegisterBardRoute(r *mux.Router) {
-	r.Handle("/api/bard", middleware.AuthMiddleware(http.HandlerFunc(BardHandler))).Methods("POST")
+func RegisterBardRoute(r *gin.Engine) {
+	r.POST("/api/bard", middleware.AuthMiddleware(), BardHandler)
 }

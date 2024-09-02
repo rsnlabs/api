@@ -2,66 +2,55 @@ package textRoutes
 
 import (
 	"bytes"
-	"encoding/json"
-	"os"
-  "github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
+	"os"
+
+	"github.com/gin-gonic/gin"
 	"api/src/middleware"
 )
 
-func MixtralHandler(w http.ResponseWriter, r *http.Request) {
-	body, err := ioutil.ReadAll(r.Body)
+func MixtralHandler(c *gin.Context) {
+	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		http.Error(w, "Error reading request body", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading request body"})
 		return
 	}
 
 	if len(body) == 0 {
-		noPromptResponse := map[string]string{"message": "No prompt was provided"}
-		jsonResponse, err := json.Marshal(noPromptResponse)
-		if err != nil {
-			http.Error(w, "Error creating JSON response", http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write(jsonResponse)
+		c.JSON(http.StatusBadRequest, gin.H{"message": "No prompt was provided"})
 		return
 	}
 
-	mixtralURL := "https://api.rsnai.org/api/v1/user/mixtral"
-	mixtralBearerKey := os.Getenv("APIKEY")
+	APIURL := "https://api.rnilaweera.lk/api/v1/user/mixtral"
+	BearerKey := os.Getenv("APIKEY")
 
-	req, err := http.NewRequest("POST", mixtralURL, bytes.NewBuffer(body))
+	req, err := http.NewRequest("POST", APIURL, bytes.NewBuffer(body))
 	if err != nil {
-		http.Error(w, "Error creating Mixtral request", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating Mixtral request"})
 		return
 	}
 
-	req.Header.Set("Authorization", "Bearer "+mixtralBearerKey)
+	req.Header.Set("Authorization", "Bearer "+BearerKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Error making request to Mixtral API", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error making request to Mixtral API"})
 		return
 	}
 	defer resp.Body.Close()
 
-	mixtralResponse, err := ioutil.ReadAll(resp.Body)
+	Response, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		http.Error(w, "Error reading Mixtral response", http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading Mixtral response"})
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(resp.StatusCode)
-	w.Write(mixtralResponse)
+	c.Data(resp.StatusCode, "application/json", Response)
 }
 
-func RegisterMixtralRoute(r *mux.Router) {
-	r.Handle("/api/mixtral", middleware.AuthMiddleware(http.HandlerFunc(MixtralHandler))).Methods("POST")
+func RegisterMixtralRoute(r *gin.Engine) {
+	r.POST("/api/mixtral", middleware.AuthMiddleware(), MixtralHandler)
 }
